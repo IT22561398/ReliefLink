@@ -210,6 +210,9 @@ importers:
       '@prisma/client':
         specifier: ^5.7.0
         version: 5.22.0(prisma@7.5.0(@types/react@19.2.14)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.9.3))
+      '@relieflink/types':
+        specifier: workspace:*
+        version: link:../types
     devDependencies:
       rimraf:
         specifier: ^5.0.0

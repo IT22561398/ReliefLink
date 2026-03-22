@@ -1,4 +1,6 @@
 import { PrismaClient } from '../../generated/client/index.js';
+import { AssignmentStatus } from '../../generated/client/index.js';
+import { NotificationChannel } from '@relieflink/types';
 import { NotificationQueueClient } from '../infrastructure/queue-client.js';
 import { createLogger } from '@relieflink/logger';
 
@@ -15,7 +17,7 @@ export class AssignmentService {
     volunteerId: string | undefined,
     resourceId: string | undefined,
     assignedBy: string,
-    status: string
+    status: AssignmentStatus
   ) {
     // STEP 1: Create assignment in database (SYNCHRONOUS - critical)
     const assignment = await this.prisma.assignment.create({
@@ -38,7 +40,7 @@ export class AssignmentService {
         await this.notificationQueueClient.queueNotification({
           userId: volunteer.userId,
           message: `You have been assigned to relief request ${requestId}. Status: ${status}`,
-          channel: 'in_app',
+          channel: NotificationChannel.in_app,
           metadata: {
             requestId,
             volunteerId,

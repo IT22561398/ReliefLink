@@ -1,23 +1,11 @@
 import { Queue } from 'bullmq';
+import type { JobsOptions } from 'bullmq';
 import { Redis } from 'ioredis';
 
 export interface QueueConfig {
   name: string;
   connection: Redis;
-  defaultJobOptions?: {
-    attempts?: number;
-    backoff?: {
-      type: string;
-      delay: number;
-    };
-    removeOnComplete?: {
-      age?: number;
-      count?: number;
-    };
-    removeOnFail?: {
-      age?: number;
-    };
-  };
+  defaultJobOptions?: JobsOptions;
 }
 
 /**
@@ -43,27 +31,26 @@ export const DEFAULT_JOB_OPTIONS = {
     delay: 1000
   },
   removeOnComplete: {
-    age: 24 * 3600, // Keep completed jobs for 24 hours
+    age: 24 * 3600,
     count: 1000
   },
   removeOnFail: {
-    age: 7 * 24 * 3600 // Keep failed jobs for 7 days
+    age: 7 * 24 * 3600
   }
-};
+} satisfies JobsOptions;
 
 /**
  * Create a BullMQ queue
  */
 export function createQueue<T>(config: QueueConfig): Queue<T> {
   const options = {
-    connection: config.connection,
-    defaultJobOptions: {
-      ...DEFAULT_JOB_OPTIONS,
-      ...config.defaultJobOptions
-    }
+    connection: config.connection as any,
+    defaultJobOptions: config.defaultJobOptions
+      ? ({ ...DEFAULT_JOB_OPTIONS, ...config.defaultJobOptions } as JobsOptions)
+      : DEFAULT_JOB_OPTIONS
   };
 
-  return new Queue<T>(config.name, options);
+  return new Queue<T>(config.name, options) as unknown as Queue<T>;
 }
 
 /**

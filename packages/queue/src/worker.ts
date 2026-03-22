@@ -19,7 +19,7 @@ export function createWorker<T, R>(
   processor: (job: Job<T>) => Promise<R>
 ): Worker<T, R> {
   const options = {
-    connection: config.connection,
+    connection: config.connection as any,
     concurrency: config.concurrency || 5,
     limiter: config.limiter
   };

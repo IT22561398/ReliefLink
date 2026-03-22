@@ -42,10 +42,6 @@ export function createUserRoutes(userController: UserController): Router {
     userController.getApprovedVolunteers(req as AuthenticatedRequest, res, next);
   });
 
-  router.get('/volunteers/debug/all-statuses', requireCoordinatorOrAdmin, (req, res, next) => {
-    userController.getAllVolunteerStatuses(req as AuthenticatedRequest, res, next);
-  });
-
   /**
    * @swagger
    * /users/volunteers/{id}/approve:

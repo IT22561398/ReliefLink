@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import type { SignOptions } from 'jsonwebtoken';
 import type { AuthPayload, UserPublic, Role } from '@relieflink/types';
 import { config } from '../config/index.js';
 import { UserRepository } from '../repositories/user.repository.js';
@@ -128,8 +129,9 @@ export class AuthService {
   }
 
   private generateToken(payload: Omit<AuthPayload, 'iat' | 'exp'>): string {
+    const expiresIn = config.jwt.expiresIn as SignOptions['expiresIn'];
     return jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn
+      expiresIn
     });
   }
 

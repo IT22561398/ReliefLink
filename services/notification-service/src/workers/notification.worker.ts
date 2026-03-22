@@ -22,7 +22,7 @@ export function createNotificationWorker(redis: Redis, prisma: PrismaClient): Wo
             channel: job.data.channel,
             deliveryStatus: 'delivered',
             metadata: job.data.metadata
-          }
+          } as any
         });
 
         logger.info('Notification processed', { jobId: job.id, notificationId: notification.id, userId: job.data.userId });
@@ -34,7 +34,7 @@ export function createNotificationWorker(redis: Redis, prisma: PrismaClient): Wo
     };
 
     const worker = new Worker<NotificationJobData>(queueName, processor, {
-      connection: redis,
+      connection: redis as any,
       concurrency: 5,
       limiter: {
         max: 100,

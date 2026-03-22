@@ -40,7 +40,7 @@ export default function ProfilePage() {
         const data = await response.json()
         if (data.data && data.data.length > 0) {
           const currentVolunteer = data.data.find(
-            (v: any) => v.userId === user?.userId
+            (v: any) => v.userId === user?.id
           )
           if (currentVolunteer) {
             setVolunteerData(currentVolunteer)
@@ -57,6 +57,8 @@ export default function ProfilePage() {
   if (!user) {
     return null
   }
+
+  const userStatus = (user as { status?: string }).status
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -154,17 +156,17 @@ export default function ProfilePage() {
             </div>
 
             {/* Status */}
-            {user.status && (
+            {userStatus && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">
                   Account Status
                 </label>
                 <div className="flex items-center gap-2">
                   <Badge
-                    variant={user.status === 'active' ? 'default' : 'secondary'}
+                    variant={userStatus === 'active' ? 'default' : 'secondary'}
                     className="capitalize"
                   >
-                    {user.status}
+                    {userStatus}
                   </Badge>
                 </div>
               </div>
@@ -219,7 +221,7 @@ export default function ProfilePage() {
                   volunteers, approve new volunteers, and oversee operations.
                 </p>
               )}
-              {user.role === 'admin' && (
+              {(user as { role: string }).role === 'admin' && (
                 <p>
                   As an Admin, you have full access to all system features including
                   user management, configuration, and administrative tasks.

@@ -3,6 +3,7 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import { createLogger, createRequestLogger, createErrorLogger } from '@relieflink/logger';
 import { createAuthMiddleware, requireCoordinatorOrAdmin, AuthenticatedRequest } from '@relieflink/auth-middleware';
+import { NotificationChannel } from '@relieflink/types';
 import { config } from './config/index.js';
 import { PrismaClient, VolunteerAvailability, ResourceAvailability, AssignmentStatus } from '../generated/client/index.js';
 import { z } from 'zod';
@@ -154,7 +155,7 @@ export function createApp(prisma: PrismaClient, notificationQueue: Queue<Notific
         await notificationQueueClient.queueNotification({
           userId: volunteer.userId,
           message: `You were assigned to request ${parsed.data.requestId}`,
-          channel: 'in_app'
+              channel: NotificationChannel.in_app
         });
       }
     }
@@ -252,7 +253,7 @@ export function createApp(prisma: PrismaClient, notificationQueue: Queue<Notific
         await notificationQueueClient.queueNotification({
           userId: requestData.data?.requesterId ?? '',
           message: `Volunteer ${volunteerUser.fullName} is ready to help! Contact: ${volunteerUser.phone || 'N/A'}`,
-          channel: 'in_app',
+                channel: NotificationChannel.in_app,
           metadata: {
             requestId: parsed.data.requestId,
             volunteerId: volunteer.id,
@@ -394,7 +395,7 @@ export function createApp(prisma: PrismaClient, notificationQueue: Queue<Notific
         await notificationQueueClient.queueNotification({
           userId: requesterId,
           message: `Volunteer ${volunteerName} ${parsed.data.status === 'in_progress' ? 'started work' : 'completed the task'}`,
-          channel: 'in_app',
+                channel: NotificationChannel.in_app,
           metadata: {
             requestId: assignment.requestId,
             assignmentId: assignment.id,

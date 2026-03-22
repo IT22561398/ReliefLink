@@ -1,3 +1,4 @@
+import { NotificationChannel } from '@relieflink/types';
 import type { RequestCategory, Urgency, RequestStatus } from '@relieflink/types';
 import { RequestRepository, RequestFilters } from '../repositories/request.repository.js';
 import { NotificationQueueClient } from '../infrastructure/queue-client.js';
@@ -36,7 +37,7 @@ export class RequestService {
     await this.notificationQueueClient.queueNotification({
       userId: requesterId,
       message: `Relief request created with status ${request.status}`,
-      channel: 'in_app',
+      channel: NotificationChannel.in_app,
       metadata: {
         requestId: request.id,
         status: request.status,
@@ -96,7 +97,7 @@ export class RequestService {
     await this.notificationQueueClient.queueNotification({
       userId: existing.requesterId,
       message: `Request ${id} status changed from ${oldStatus} to ${status}`,
-      channel: 'in_app',
+      channel: NotificationChannel.in_app,
       metadata: {
         requestId: id,
         oldStatus: String(oldStatus),

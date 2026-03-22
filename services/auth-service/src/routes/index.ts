@@ -1,2 +1,2 @@
-export * from './auth.routes';
-export * from './user.routes';
+export * from './auth.routes.js';
+export * from './user.routes.js';

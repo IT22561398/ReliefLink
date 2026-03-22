@@ -4,7 +4,7 @@ import { PrismaClient } from '../generated/client/index.js';
 import { createApp } from './app.js';
 import { config } from './config/index.js';
 import { createLogger } from '@relieflink/logger';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import { initializeQueues, closeQueues } from './infrastructure/queue.js';
 
 const logger = createLogger({ service: 'volunteer-service', level: config.logLevel });
