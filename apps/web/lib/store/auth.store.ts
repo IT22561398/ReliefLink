@@ -8,7 +8,7 @@ interface User {
   fullName: string
   email: string
   phone?: string
-  role: 'requester' | 'volunteer' | 'coordinator'
+  role: 'requester' | 'volunteer' | 'coordinator' | 'admin'
   district: string
   city?: string
 }

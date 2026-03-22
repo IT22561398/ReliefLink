@@ -87,7 +87,7 @@ export default function AssignmentPage() {
 
     setIsUpdating(true)
     try {
-      const updated = await apiPatch(`/api/v1/assignments/${assignment.id}/status`, {
+      const updated = await apiPatch<Assignment>(`/api/v1/assignments/${assignment.id}/status`, {
         status: newStatus
       })
 
@@ -233,7 +233,7 @@ export default function AssignmentPage() {
                   className="flex-1"
                   onClick={() => handleStatusUpdate('completed')}
                   disabled={isUpdating}
-                  variant="success"
+                  variant="default"
                 >
                   {isUpdating ? 'Updating...' : '✓ Mark Completed'}
                 </Button>
