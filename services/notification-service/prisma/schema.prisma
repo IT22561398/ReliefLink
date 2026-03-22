@@ -1,0 +1,39 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/client"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum NotificationChannel {
+  in_app
+  email
+}
+
+enum DeliveryStatus {
+  queued
+  delivered
+  failed
+}
+
+model Notification {
+  id             String              @id @default(uuid())
+  userId         String
+  message        String
+  channel        NotificationChannel @default(in_app)
+  deliveryStatus DeliveryStatus      @default(delivered)
+  metadata       Json?
+  createdAt      DateTime            @default(now())
+}
+
+model StatusEvent {
+  id        String   @id @default(uuid())
+  requestId String
+  oldStatus String
+  newStatus String
+  changedBy String
+  timestamp DateTime @default(now())
+}

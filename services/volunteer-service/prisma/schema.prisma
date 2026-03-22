@@ -1,0 +1,67 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/client"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum VolunteerAvailability {
+  available
+  busy
+  offline
+}
+
+enum ResourceAvailability {
+  available
+  reserved
+  unavailable
+}
+
+enum AssignmentStatus {
+  assigned
+  in_progress
+  completed
+}
+
+model Volunteer {
+  id                 String                @id @default(uuid())
+  userId             String                @unique
+  skillSet           String[]
+  district           String
+  city               String
+  availabilityStatus VolunteerAvailability @default(available)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  assignments Assignment[]
+}
+
+model Resource {
+  id                 String               @id @default(uuid())
+  ownerId            String
+  category           String
+  quantity           Int
+  district           String
+  city               String
+  availabilityStatus ResourceAvailability @default(available)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  assignments Assignment[]
+}
+
+model Assignment {
+  id          String           @id @default(uuid())
+  requestId   String
+  volunteerId String?
+  resourceId  String?
+  assignedBy  String
+  status      AssignmentStatus @default(assigned)
+  assignedAt  DateTime         @default(now())
+
+  volunteer Volunteer? @relation(fields: [volunteerId], references: [id])
+  resource  Resource?  @relation(fields: [resourceId], references: [id])
+}

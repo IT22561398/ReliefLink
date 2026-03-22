@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ReliefLink: Full Stack Dev (Gateway + Config)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "zsh -lc 'set -a && source .env && set +a && pnpm dev'",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "ReliefLink: Web Dev Only",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "zsh -lc 'set -a && source .env && set +a && pnpm dev:web'",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "ReliefLink: Build All",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "pnpm build",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
