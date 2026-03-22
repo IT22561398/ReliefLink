@@ -139,7 +139,7 @@ export class AuthService {
     email: string;
     phone: string;
     role: string;
-    status: string;
+    status: string | null;
     district: string;
     city: string;
   }): UserPublic {
@@ -149,7 +149,7 @@ export class AuthService {
       email: user.email,
       phone: user.phone,
       role: user.role as Role,
-      status: user.status,
+      status: user.status || 'active',
       district: user.district,
       city: user.city
     };

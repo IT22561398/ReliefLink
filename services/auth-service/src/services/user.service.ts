@@ -92,7 +92,7 @@ export class UserService {
 
     return {
       userId: updated.id,
-      status: updated.status
+      status: updated.status || 'active'
     };
   }
 
@@ -110,7 +110,7 @@ export class UserService {
 
     return {
       userId: updated.id,
-      status: updated.status
+      status: updated.status || 'rejected'
     };
   }
 
@@ -120,7 +120,7 @@ export class UserService {
     email: string;
     phone: string;
     role: string;
-    status: string;
+    status: string | null;
     district: string;
     city: string;
   }): UserPublic {
@@ -130,7 +130,7 @@ export class UserService {
       email: user.email,
       phone: user.phone,
       role: user.role as Role,
-      status: user.status,
+      status: user.status || 'active',
       district: user.district,
       city: user.city
     };
