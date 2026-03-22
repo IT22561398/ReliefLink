@@ -9,6 +9,7 @@ resources:
   - postgres.yaml
   - redis.yaml
   - api-gateway.yaml
+  - web-service.yaml
   - auth-service.yaml
   - request-service.yaml
   - volunteer-service.yaml

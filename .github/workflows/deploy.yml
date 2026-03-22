@@ -60,9 +60,8 @@ jobs:
         run: |
           ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
           cd k8s/base
-          for service in api-gateway auth-service request-service volunteer-service notification-service; do
-            sed -i "s|image: $service:latest|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-$service:${{ github.sha }}|g" *service.yaml
-            sed -i "s|image: $service:latest|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-$service:${{ github.sha }}|g" api-gateway.yaml
+          for service in api-gateway auth-service request-service volunteer-service notification-service web; do
+            sed -i "s|image: $service:latest|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-$service:${{ github.sha }}|g" *.yaml
           done
 
       - name: Deploy to EKS
@@ -71,7 +70,7 @@ jobs:
 
       - name: Wait for rollout
         run: |
-          for service in api-gateway auth-service request-service volunteer-service notification-service; do
+          for service in api-gateway auth-service request-service volunteer-service notification-service web-service; do
             kubectl rollout status deployment/$service -n relieflink --timeout=5m
           done
 
