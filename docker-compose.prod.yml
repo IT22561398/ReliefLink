@@ -1,0 +1,235 @@
+version: '3.8'
+
+services:
+  # PostgreSQL - Auth Service
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: relieflink-postgres-auth
+    environment:
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:-secure_auth_password}
+      POSTGRES_DB: auth_service_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - relieflink
+
+  # PostgreSQL - Request Service
+  postgres-request:
+    image: postgres:16-alpine
+    container_name: relieflink-postgres-request
+    environment:
+      POSTGRES_USER: request_user
+      POSTGRES_PASSWORD: ${REQUEST_DB_PASSWORD:-secure_request_password}
+      POSTGRES_DB: request_service_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_request_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U request_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - relieflink
+
+  # PostgreSQL - Volunteer Service
+  postgres-volunteer:
+    image: postgres:16-alpine
+    container_name: relieflink-postgres-volunteer
+    environment:
+      POSTGRES_USER: volunteer_user
+      POSTGRES_PASSWORD: ${VOLUNTEER_DB_PASSWORD:-secure_volunteer_password}
+      POSTGRES_DB: volunteer_service_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_volunteer_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U volunteer_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - relieflink
+
+  # PostgreSQL - Notification Service
+  postgres-notification:
+    image: postgres:16-alpine
+    container_name: relieflink-postgres-notification
+    environment:
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: ${NOTIFICATION_DB_PASSWORD:-secure_notification_password}
+      POSTGRES_DB: notification_service_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_notification_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - relieflink
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: relieflink-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-secure_redis_password}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - relieflink
+
+  # Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    container_name: relieflink-auth-service
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      JWT_EXPIRES_IN: 24h
+      DATABASE_URL: postgresql://auth_user:${AUTH_DB_PASSWORD:-secure_auth_password}@postgres-auth:5432/auth_service_db
+      LOG_LEVEL: info
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - relieflink
+    restart: unless-stopped
+
+  # Request Service
+  request-service:
+    build:
+      context: .
+      dockerfile: services/request-service/Dockerfile
+    container_name: relieflink-request-service
+    environment:
+      NODE_ENV: production
+      PORT: 3004
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      DATABASE_URL: postgresql://request_user:${REQUEST_DB_PASSWORD:-secure_request_password}@postgres-request:5432/request_service_db
+      REDIS_URL: redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379
+      AUTH_SERVICE_URL: http://auth-service:3001
+      LOG_LEVEL: info
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres-request:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - relieflink
+    restart: unless-stopped
+
+  # Volunteer Service
+  volunteer-service:
+    build:
+      context: .
+      dockerfile: services/volunteer-service/Dockerfile
+    container_name: relieflink-volunteer-service
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      DATABASE_URL: postgresql://volunteer_user:${VOLUNTEER_DB_PASSWORD:-secure_volunteer_password}@postgres-volunteer:5432/volunteer_service_db
+      REDIS_URL: redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379
+      AUTH_SERVICE_URL: http://auth-service:3001
+      REQUEST_SERVICE_URL: http://request-service:3004
+      LOG_LEVEL: info
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres-volunteer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - relieflink
+    restart: unless-stopped
+
+  # Notification Service
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: relieflink-notification-service
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DATABASE_URL: postgresql://notification_user:${NOTIFICATION_DB_PASSWORD:-secure_notification_password}@postgres-notification:5432/notification_service_db
+      REDIS_URL: redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379
+      LOG_LEVEL: info
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres-notification:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - relieflink
+    restart: unless-stopped
+
+volumes:
+  postgres_auth_data:
+    driver: local
+  postgres_request_data:
+    driver: local
+  postgres_volunteer_data:
+    driver: local
+  postgres_notification_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  relieflink:
+    driver: bridge

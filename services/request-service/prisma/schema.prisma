@@ -1,0 +1,48 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/client"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RequestCategory {
+  water
+  food
+  medicine
+  shelter
+  rescue
+  transport
+  other
+}
+
+enum Urgency {
+  low
+  medium
+  high
+}
+
+enum RequestStatus {
+  pending
+  matched
+  assigned
+  in_progress
+  completed
+  cancelled
+}
+
+model ReliefRequest {
+  id          String          @id @default(uuid())
+  requesterId String
+  category    RequestCategory
+  description String
+  urgency     Urgency
+  district    String
+  city        String
+  peopleCount Int
+  status      RequestStatus   @default(pending)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}

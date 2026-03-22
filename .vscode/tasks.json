@@ -1,0 +1,82 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ReliefLink: Install Dependencies",
+            "type": "shell",
+            "command": "pnpm install",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "ReliefLink: Prisma Generate (All Services)",
+            "type": "shell",
+            "command": "zsh",
+            "args": [
+                "-lc",
+                "set -a && source .env && set +a && pnpm --filter @relieflink/auth-service prisma:generate && pnpm --filter @relieflink/request-service prisma:generate && pnpm --filter @relieflink/volunteer-service prisma:generate && pnpm --filter @relieflink/notification-service prisma:generate"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "ReliefLink: Prisma Migrate (All Services)",
+            "type": "shell",
+            "command": "zsh",
+            "args": [
+                "-lc",
+                "set -a && source .env && set +a && pnpm --filter @relieflink/auth-service prisma:migrate && pnpm --filter @relieflink/request-service prisma:migrate && pnpm --filter @relieflink/volunteer-service prisma:migrate && pnpm --filter @relieflink/notification-service prisma:migrate"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "ReliefLink: Build All",
+            "type": "shell",
+            "command": "pnpm build",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "ReliefLink: Run Full Stack (Dev)",
+            "type": "shell",
+            "command": "zsh",
+            "args": [
+                "-lc",
+                "set -a && source .env && set +a && pnpm dev"
+            ],
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "ReliefLink: Run Web Only",
+            "type": "shell",
+            "command": "zsh",
+            "args": [
+                "-lc",
+                "set -a && source .env && set +a && pnpm dev:web"
+            ],
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "ReliefLink: Health Check APIs",
+            "type": "shell",
+            "command": "zsh",
+            "args": [
+                "-lc",
+                "curl -s http://localhost:3006/health && echo && curl -s http://localhost:3005/health && echo && curl -s http://localhost:3001/health && echo && curl -s http://localhost:3002/health && echo && curl -s http://localhost:3003/health && echo && curl -s http://localhost:3004/health && echo"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "ReliefLink: Setup (Install + Generate + Migrate + Build)",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "ReliefLink: Install Dependencies",
+                "ReliefLink: Prisma Generate (All Services)",
+                "ReliefLink: Prisma Migrate (All Services)",
+                "ReliefLink: Build All"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

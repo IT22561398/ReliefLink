@@ -1,0 +1,14 @@
+{
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "editor.formatOnSave": true,
+    "files.exclude": {
+        "**/.next": true,
+        "**/dist": true,
+        "**/generated/client": true
+    },
+    "search.exclude": {
+        "**/.next": true,
+        "**/dist": true,
+        "**/generated/client": true
+    }
+}

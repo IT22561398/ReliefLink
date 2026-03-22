@@ -1,0 +1,60 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: relieflink-ingress
+  namespace: relieflink
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - relieflink.example.com
+    secretName: relieflink-tls
+  rules:
+  - host: relieflink.example.com
+    http:
+      paths:
+      - path: /api/v1/auth
+        pathType: Prefix
+        backend:
+          service:
+            name: auth-service
+            port:
+              number: 3001
+      - path: /api/v1/requests
+        pathType: Prefix
+        backend:
+          service:
+            name: request-service
+            port:
+              number: 3004
+      - path: /api/v1/volunteers
+        pathType: Prefix
+        backend:
+          service:
+            name: volunteer-service
+            port:
+              number: 3003
+      - path: /api/v1/assignments
+        pathType: Prefix
+        backend:
+          service:
+            name: volunteer-service
+            port:
+              number: 3003
+      - path: /api/v1/notifications
+        pathType: Prefix
+        backend:
+          service:
+            name: notification-service
+            port:
+              number: 3002
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 3000
