@@ -48,7 +48,9 @@ export class AppError extends Error {
     this.details = details;
     this.isOperational = true;
 
-    Error.captureStackTrace(this, this.constructor);
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
   }
 
   toJSON() {
