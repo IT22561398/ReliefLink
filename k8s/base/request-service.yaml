@@ -20,7 +20,7 @@ metadata:
   name: request-service
   namespace: relieflink
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: request-service
@@ -65,13 +65,13 @@ spec:
             configMapKeyRef:
               name: relieflink-config
               key: LOG_LEVEL
-        - name: DATABASE_URL
-          value: "postgresql://request_user:$(DB_PASSWORD)@postgres-0.postgres:5432/request_service_db"
+        - name: REQUEST_DATABASE_URL
+          value: "postgresql://postgres:$(DB_PASSWORD)@postgres-0.postgres:5432/postgres"
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: relieflink-secrets
-              key: REQUEST_DB_PASSWORD
+              key: POSTGRES_PASSWORD
         - name: REDIS_URL
           value: "redis://:$(REDIS_PASSWORD)@redis-0.redis:6379"
         - name: REDIS_PASSWORD
@@ -84,6 +84,11 @@ spec:
             configMapKeyRef:
               name: relieflink-config
               key: AUTH_SERVICE_URL
+        - name: NOTIFICATION_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: relieflink-config
+              key: NOTIFICATION_SERVICE_URL
         livenessProbe:
           httpGet:
             path: /health
@@ -98,11 +103,11 @@ spec:
           periodSeconds: 5
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "200m"
+            memory: "128Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "1000m"
+            memory: "384Mi"
+            cpu: "300m"
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -114,8 +119,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: request-service
-  minReplicas: 2
-  maxReplicas: 5
+  minReplicas: 1
+  maxReplicas: 2
   metrics:
   - type: Resource
     resource:

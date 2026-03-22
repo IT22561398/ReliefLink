@@ -1,84 +1,53 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: volunteer-service
+  name: api-gateway
   namespace: relieflink
   labels:
-    app: volunteer-service
+    app: api-gateway
 spec:
   selector:
-    app: volunteer-service
+    app: api-gateway
   ports:
-    - port: 3003
-      targetPort: 3003
+    - port: 3005
+      targetPort: 3005
       protocol: TCP
   type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: volunteer-service
+  name: api-gateway
   namespace: relieflink
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: volunteer-service
+      app: api-gateway
   template:
     metadata:
       labels:
-        app: volunteer-service
+        app: api-gateway
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: app
-                  operator: In
-                  values:
-                  - volunteer-service
-              topologyKey: kubernetes.io/hostname
       containers:
-      - name: volunteer-service
-        image: volunteer-service:latest
+      - name: api-gateway
+        image: api-gateway:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 3003
+        - containerPort: 3005
         env:
         - name: NODE_ENV
           valueFrom:
             configMapKeyRef:
               name: relieflink-config
               key: NODE_ENV
-        - name: PORT
-          value: "3003"
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: relieflink-secrets
-              key: JWT_SECRET
+        - name: API_GATEWAY_PORT
+          value: "3005"
         - name: LOG_LEVEL
           valueFrom:
             configMapKeyRef:
               name: relieflink-config
               key: LOG_LEVEL
-        - name: VOLUNTEER_DATABASE_URL
-          value: "postgresql://postgres:$(DB_PASSWORD)@postgres-0.postgres:5432/postgres"
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: relieflink-secrets
-              key: POSTGRES_PASSWORD
-        - name: REDIS_URL
-          value: "redis://:$(REDIS_PASSWORD)@redis-0.redis:6379"
-        - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: relieflink-secrets
-              key: REDIS_PASSWORD
         - name: AUTH_SERVICE_URL
           valueFrom:
             configMapKeyRef:
@@ -89,16 +58,28 @@ spec:
             configMapKeyRef:
               name: relieflink-config
               key: REQUEST_SERVICE_URL
+        - name: VOLUNTEER_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: relieflink-config
+              key: VOLUNTEER_SERVICE_URL
+        - name: NOTIFICATION_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: relieflink-config
+              key: NOTIFICATION_SERVICE_URL
+        - name: CORS_ORIGIN
+          value: "*"
         livenessProbe:
           httpGet:
             path: /health
-            port: 3003
-          initialDelaySeconds: 30
+            port: 3005
+          initialDelaySeconds: 20
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
-            port: 3003
+            port: 3005
           initialDelaySeconds: 5
           periodSeconds: 5
         resources:
@@ -112,13 +93,13 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: volunteer-service-hpa
+  name: api-gateway-hpa
   namespace: relieflink
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: volunteer-service
+    name: api-gateway
   minReplicas: 1
   maxReplicas: 2
   metrics:
@@ -127,4 +108,4 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70
+        averageUtilization: 75

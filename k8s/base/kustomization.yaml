@@ -8,6 +8,7 @@ resources:
   - secrets-configmap.yaml
   - postgres.yaml
   - redis.yaml
+  - api-gateway.yaml
   - auth-service.yaml
   - request-service.yaml
   - volunteer-service.yaml
