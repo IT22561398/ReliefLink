@@ -3,22 +3,7 @@ name: Deploy to AWS EKS
 on:
   push:
     branches: [main]
-    tags:
-      - 'v*'
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-          - staging
-          - production
-
-concurrency:
-  group: deployment-${{ github.ref }}
-  cancel-in-progress: false
 
 permissions:
   id-token: write
@@ -38,19 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Determine environment
-        id: env
-        run: |
-          if [[ "${{ github.ref }}" == "refs/tags/v"* ]]; then
-            echo "environment=production" >> $GITHUB_OUTPUT
-            echo "cluster=${{ secrets.EKS_CLUSTER_PROD }}" >> $GITHUB_OUTPUT
-            echo "namespace=relieflink" >> $GITHUB_OUTPUT
-          else
-            echo "environment=staging" >> $GITHUB_OUTPUT
-            echo "cluster=${{ secrets.EKS_CLUSTER_STAGING }}" >> $GITHUB_OUTPUT
-            echo "namespace=relieflink-staging" >> $GITHUB_OUTPUT
-          fi
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -64,12 +36,12 @@ jobs:
       - name: Update kubeconfig for EKS
         run: |
           aws eks update-kubeconfig \
-            --name ${{ steps.env.outputs.cluster }} \
+            --name ${{ secrets.EKS_CLUSTER_STAGING }} \
             --region ${{ env.AWS_REGION }}
 
       - name: Create namespace
         run: |
-          kubectl create namespace ${{ steps.env.outputs.namespace }} --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create namespace relieflink --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Create secrets
         run: |
@@ -80,91 +52,31 @@ jobs:
             --from-literal=VOLUNTEER_DB_PASSWORD=${{ secrets.VOLUNTEER_DB_PASSWORD }} \
             --from-literal=NOTIFICATION_DB_PASSWORD=${{ secrets.NOTIFICATION_DB_PASSWORD }} \
             --from-literal=REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} \
-            -n ${{ steps.env.outputs.namespace }} \
+            -n relieflink \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Update image references in manifests
         run: |
           ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
-
           cd k8s/base
-
           for service in auth-service request-service volunteer-service notification-service; do
             sed -i "s|image: $service:latest|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-$service:${{ github.sha }}|g" *service.yaml
           done
 
-      - name: Deploy to EKS - ${{ steps.env.outputs.environment }}
+      - name: Deploy to EKS
         run: |
-          kubectl apply -k k8s/overlays/prod/ -n ${{ steps.env.outputs.namespace }}
+          kubectl apply -k k8s/base/ -n relieflink
 
       - name: Wait for rollout
         run: |
           for service in auth-service request-service volunteer-service notification-service; do
-            kubectl rollout status deployment/$service \
-              -n ${{ steps.env.outputs.namespace }} --timeout=5m
+            kubectl rollout status deployment/$service -n relieflink --timeout=5m
           done
 
       - name: Verify deployment
         run: |
           echo "=== Pods Status ==="
-          kubectl get pods -n ${{ steps.env.outputs.namespace }}
+          kubectl get pods -n relieflink
 
           echo "=== Services ==="
-          kubectl get svc -n ${{ steps.env.outputs.namespace }}
-
-          echo "=== Endpoints ==="
-          kubectl get endpoints -n ${{ steps.env.outputs.namespace }}
-
-      - name: Run health checks
-        run: |
-          kubectl port-forward svc/auth-service 3001:3001 -n ${{ steps.env.outputs.namespace }} &
-          PF_PID=$!
-          sleep 2
-
-          if curl -f http://localhost:3001/health; then
-            echo "✓ Auth service health check passed"
-          else
-            echo "✗ Auth service health check failed"
-            kill $PF_PID
-            exit 1
-          fi
-
-          kill $PF_PID || true
-
-      - name: Notify Slack on success
-        if: success()
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
-          payload: |
-            {
-              "text": "✅ Deployment to EKS successful",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Deployment to EKS Successful* 🚀\nEnvironment: ${{ steps.env.outputs.environment }}\nCluster: ${{ steps.env.outputs.cluster }}\nCommit: ${{ github.sha }}\nRef: ${{ github.ref }}"
-                  }
-                }
-              ]
-            }
-
-      - name: Notify Slack on failure
-        if: failure()
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
-          payload: |
-            {
-              "text": "❌ Deployment to EKS failed",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Deployment to EKS Failed* ❌\nEnvironment: ${{ steps.env.outputs.environment }}\nCluster: ${{ steps.env.outputs.cluster }}\nCommit: ${{ github.sha }}\nRef: ${{ github.ref }}\nCheck: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                  }
-                }
-              ]
-            }
+          kubectl get svc -n relieflink
