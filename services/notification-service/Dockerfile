@@ -20,6 +20,9 @@ COPY packages packages
 COPY services/notification-service services/notification-service
 COPY tsconfig.json ./
 
+# Dummy DATABASE_URL for Prisma generate (not used at runtime)
+ENV NOTIFICATION_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+
 RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/validators build && \
     pnpm --filter @relieflink/config build && \
