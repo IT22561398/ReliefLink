@@ -4,7 +4,8 @@
 export enum Role {
   requester = 'requester',
   volunteer = 'volunteer',
-  coordinator = 'coordinator'
+  coordinator = 'coordinator',
+  admin = 'admin'
 }
 
 /**

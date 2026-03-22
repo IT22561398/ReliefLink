@@ -36,15 +36,17 @@ export type PermissionCheck = (user: AuthPayload, resource?: unknown) => boolean
  * Role hierarchy for RBAC
  */
 export const ROLE_HIERARCHY: Record<Role, number> = {
-  [Role.requester]: 1,
-  [Role.volunteer]: 2,
-  [Role.coordinator]: 3,
-  [Role.admin]: 4
+  requester: 1,
+  volunteer: 2,
+  coordinator: 3,
+  admin: 4
 };
 
 /**
  * Check if a role has minimum required level
  */
 export function hasMinimumRole(userRole: Role, requiredRole: Role): boolean {
-  return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole];
+  const userLevel = ROLE_HIERARCHY[userRole as keyof typeof ROLE_HIERARCHY] ?? 0;
+  const requiredLevel = ROLE_HIERARCHY[requiredRole as keyof typeof ROLE_HIERARCHY] ?? Number.MAX_SAFE_INTEGER;
+  return userLevel >= requiredLevel;
 }

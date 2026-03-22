@@ -2,6 +2,10 @@ import { Response, NextFunction } from 'express';
 import { Role } from '@relieflink/types';
 import { AuthenticatedRequest, hasMinimumRole, PermissionCheck } from './types';
 
+const ROLE_VOLUNTEER = 'volunteer' as Role;
+const ROLE_COORDINATOR = 'coordinator' as Role;
+const ROLE_ADMIN = 'admin' as Role;
+
 /**
  * Require specific roles middleware factory
  */
@@ -75,9 +79,9 @@ export function requireMinRole(minRole: Role) {
 /**
  * Common role shortcuts
  */
-export const requireAdmin = requireRoles(Role.admin);
-export const requireCoordinator = requireRoles(Role.coordinator, Role.admin);
-export const requireVolunteer = requireRoles(Role.volunteer, Role.coordinator, Role.admin);
+export const requireAdmin = requireRoles(ROLE_ADMIN);
+export const requireCoordinator = requireRoles(ROLE_COORDINATOR, ROLE_ADMIN);
+export const requireVolunteer = requireRoles(ROLE_VOLUNTEER, ROLE_COORDINATOR, ROLE_ADMIN);
 
 /**
  * Require coordinator or admin role
@@ -98,7 +102,7 @@ export function requireCoordinatorOrAdmin(
     return;
   }
 
-  if (req.user.role !== Role.coordinator && req.user.role !== Role.admin) {
+  if (req.user.role !== ROLE_COORDINATOR && req.user.role !== ROLE_ADMIN) {
     res.status(403).json({
       success: false,
       error: {
