@@ -10,6 +10,7 @@ COPY packages/config/package.json packages/config/
 COPY packages/logger/package.json packages/logger/
 COPY packages/utils/package.json packages/utils/
 COPY packages/auth-middleware/package.json packages/auth-middleware/
+COPY packages/queue/package.json packages/queue/
 COPY services/request-service/package.json services/request-service/
 RUN pnpm install --frozen-lockfile --filter @relieflink/request-service...
 
@@ -30,6 +31,7 @@ RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/logger build && \
     pnpm --filter @relieflink/utils build && \
     pnpm --filter @relieflink/auth-middleware build && \
+    pnpm --filter @relieflink/queue build && \
     pnpm --filter @relieflink/request-service db:generate && \
     pnpm --filter @relieflink/request-service build
 
@@ -50,6 +52,8 @@ COPY --from=builder --chown=appuser:nodejs /app/packages/utils/dist ./packages/u
 COPY --from=builder --chown=appuser:nodejs /app/packages/utils/package.json ./packages/utils/
 COPY --from=builder --chown=appuser:nodejs /app/packages/auth-middleware/dist ./packages/auth-middleware/dist
 COPY --from=builder --chown=appuser:nodejs /app/packages/auth-middleware/package.json ./packages/auth-middleware/
+COPY --from=builder --chown=appuser:nodejs /app/packages/queue/dist ./packages/queue/dist
+COPY --from=builder --chown=appuser:nodejs /app/packages/queue/package.json ./packages/queue/
 COPY --from=builder --chown=appuser:nodejs /app/services/request-service/dist ./dist
 COPY --from=builder --chown=appuser:nodejs /app/services/request-service/generated ./generated
 COPY --from=builder --chown=appuser:nodejs /app/services/request-service/package.json ./

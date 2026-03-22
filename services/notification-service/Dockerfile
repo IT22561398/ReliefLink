@@ -9,6 +9,7 @@ COPY packages/validators/package.json packages/validators/
 COPY packages/config/package.json packages/config/
 COPY packages/logger/package.json packages/logger/
 COPY packages/utils/package.json packages/utils/
+COPY packages/queue/package.json packages/queue/
 COPY services/notification-service/package.json services/notification-service/
 RUN pnpm install --frozen-lockfile --filter @relieflink/notification-service...
 
@@ -28,6 +29,7 @@ RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/config build && \
     pnpm --filter @relieflink/logger build && \
     pnpm --filter @relieflink/utils build && \
+    pnpm --filter @relieflink/queue build && \
     pnpm --filter @relieflink/notification-service db:generate && \
     pnpm --filter @relieflink/notification-service build
 
@@ -46,6 +48,8 @@ COPY --from=builder --chown=appuser:nodejs /app/packages/logger/dist ./packages/
 COPY --from=builder --chown=appuser:nodejs /app/packages/logger/package.json ./packages/logger/
 COPY --from=builder --chown=appuser:nodejs /app/packages/utils/dist ./packages/utils/dist
 COPY --from=builder --chown=appuser:nodejs /app/packages/utils/package.json ./packages/utils/
+COPY --from=builder --chown=appuser:nodejs /app/packages/queue/dist ./packages/queue/dist
+COPY --from=builder --chown=appuser:nodejs /app/packages/queue/package.json ./packages/queue/
 COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/dist ./dist
 COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/generated ./generated
 COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/package.json ./
