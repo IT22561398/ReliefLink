@@ -1,29 +1,35 @@
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../generated/client"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
+  output   = "../generated/client"
 }
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["volunteer_service"]
 }
 
 enum VolunteerAvailability {
   available
   busy
   offline
+
+  @@schema("volunteer_service")
 }
 
 enum ResourceAvailability {
   available
   reserved
   unavailable
+
+  @@schema("volunteer_service")
 }
 
 enum AssignmentStatus {
   assigned
   in_progress
   completed
+
+  @@schema("volunteer_service")
 }
 
 model Volunteer {
@@ -37,6 +43,8 @@ model Volunteer {
   updatedAt          DateTime              @updatedAt
 
   assignments Assignment[]
+
+  @@schema("volunteer_service")
 }
 
 model Resource {
@@ -51,6 +59,8 @@ model Resource {
   updatedAt          DateTime             @updatedAt
 
   assignments Assignment[]
+
+  @@schema("volunteer_service")
 }
 
 model Assignment {
@@ -64,4 +74,6 @@ model Assignment {
 
   volunteer Volunteer? @relation(fields: [volunteerId], references: [id])
   resource  Resource?  @relation(fields: [resourceId], references: [id])
+
+  @@schema("volunteer_service")
 }

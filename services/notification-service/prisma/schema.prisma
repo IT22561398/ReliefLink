@@ -1,22 +1,26 @@
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../generated/client"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
+  output   = "../generated/client"
 }
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["notification_service"]
 }
 
 enum NotificationChannel {
   in_app
   email
+
+  @@schema("notification_service")
 }
 
 enum DeliveryStatus {
   queued
   delivered
   failed
+
+  @@schema("notification_service")
 }
 
 model Notification {
@@ -27,6 +31,8 @@ model Notification {
   deliveryStatus DeliveryStatus      @default(delivered)
   metadata       Json?
   createdAt      DateTime            @default(now())
+
+  @@schema("notification_service")
 }
 
 model StatusEvent {
@@ -36,4 +42,6 @@ model StatusEvent {
   newStatus String
   changedBy String
   timestamp DateTime @default(now())
+
+  @@schema("notification_service")
 }

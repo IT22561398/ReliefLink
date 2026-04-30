@@ -7,7 +7,7 @@
     "dev": "turbo run dev",
     "start": "docker compose up -d && pnpm dev",
     "dev:web": "pnpm --filter @relieflink/web dev",
-    "dev:services": "turbo run dev --filter='./services/*'",
+    "dev:services": "pnpm db:generate:services && turbo run dev --filter='./services/*'",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "infra:logs": "docker compose logs -f",
@@ -23,6 +23,7 @@
     "test:integration": "turbo run test:integration",
     "clean": "turbo run clean && rimraf node_modules",
     "db:generate": "turbo run db:generate",
+    "db:generate:services": "turbo run db:generate --filter=@relieflink/auth-service --filter=@relieflink/request-service --filter=@relieflink/volunteer-service --filter=@relieflink/notification-service",
     "db:migrate": "turbo run db:migrate",
     "db:push": "turbo run db:push",
     "docker:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
@@ -54,7 +55,7 @@
     ]
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=20.0.0 <25.0.0",
     "pnpm": ">=10.0.0"
   }
 }

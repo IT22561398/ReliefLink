@@ -1,11 +1,11 @@
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../generated/client"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
+  output   = "../generated/client"
 }
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["request_service"]
 }
 
 enum RequestCategory {
@@ -16,12 +16,16 @@ enum RequestCategory {
   rescue
   transport
   other
+
+  @@schema("request_service")
 }
 
 enum Urgency {
   low
   medium
   high
+
+  @@schema("request_service")
 }
 
 enum RequestStatus {
@@ -31,6 +35,8 @@ enum RequestStatus {
   in_progress
   completed
   cancelled
+
+  @@schema("request_service")
 }
 
 model ReliefRequest {
@@ -45,4 +51,6 @@ model ReliefRequest {
   status      RequestStatus   @default(pending)
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+
+  @@schema("request_service")
 }

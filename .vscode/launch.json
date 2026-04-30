@@ -2,17 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "ReliefLink: Full Stack Dev (Gateway + Config)",
+            "name": "ReliefLink: Backend Services (No Docker)",
             "type": "node-terminal",
             "request": "launch",
-            "command": "zsh -lc 'set -a && source .env && set +a && pnpm dev'",
+            "command": "zsh -lc 'set -a && [ -f .env ] && source .env && set +a && pnpm dev:services'",
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "ReliefLink: Web Dev Only",
+            "name": "ReliefLink: Frontend (No Docker)",
             "type": "node-terminal",
             "request": "launch",
-            "command": "zsh -lc 'set -a && source .env && set +a && pnpm dev:web'",
+            "command": "zsh -lc 'set -a && [ -f .env ] && source .env && set +a && pnpm dev:web'",
             "cwd": "${workspaceFolder}"
         },
         {
@@ -21,6 +21,16 @@
             "request": "launch",
             "command": "pnpm build",
             "cwd": "${workspaceFolder}"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "ReliefLink: Frontend + Backend (No Docker)",
+            "configurations": [
+                "ReliefLink: Backend Services (No Docker)",
+                "ReliefLink: Frontend (No Docker)"
+            ],
+            "stopAll": true
         }
     ]
 }

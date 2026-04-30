@@ -9,12 +9,32 @@
             "problemMatcher": []
         },
         {
+            "label": "ReliefLink: Create .env From Example",
+            "type": "shell",
+            "command": "zsh",
+            "args": [
+                "-lc",
+                "[ -f .env ] || cp .env.example .env"
+            ],
+            "problemMatcher": []
+        },
+        {
             "label": "ReliefLink: Prisma Generate (All Services)",
             "type": "shell",
             "command": "zsh",
             "args": [
                 "-lc",
-                "set -a && source .env && set +a && pnpm --filter @relieflink/auth-service prisma:generate && pnpm --filter @relieflink/request-service prisma:generate && pnpm --filter @relieflink/volunteer-service prisma:generate && pnpm --filter @relieflink/notification-service prisma:generate"
+                "set -a && [ -f .env ] && source .env && set +a && pnpm db:generate"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "ReliefLink: Prisma Push (All Services)",
+            "type": "shell",
+            "command": "zsh",
+            "args": [
+                "-lc",
+                "set -a && [ -f .env ] && source .env && set +a && pnpm db:push"
             ],
             "problemMatcher": []
         },
@@ -24,7 +44,7 @@
             "command": "zsh",
             "args": [
                 "-lc",
-                "set -a && source .env && set +a && pnpm --filter @relieflink/auth-service prisma:migrate && pnpm --filter @relieflink/request-service prisma:migrate && pnpm --filter @relieflink/volunteer-service prisma:migrate && pnpm --filter @relieflink/notification-service prisma:migrate"
+                "set -a && [ -f .env ] && source .env && set +a && pnpm db:migrate"
             ],
             "problemMatcher": []
         },
@@ -36,25 +56,34 @@
             "problemMatcher": []
         },
         {
-            "label": "ReliefLink: Run Full Stack (Dev)",
+            "label": "ReliefLink: Run Backend Services (No Docker)",
             "type": "shell",
             "command": "zsh",
             "args": [
                 "-lc",
-                "set -a && source .env && set +a && pnpm dev"
+                "set -a && [ -f .env ] && source .env && set +a && pnpm dev:services"
             ],
             "isBackground": true,
             "problemMatcher": []
         },
         {
-            "label": "ReliefLink: Run Web Only",
+            "label": "ReliefLink: Run Frontend (No Docker)",
             "type": "shell",
             "command": "zsh",
             "args": [
                 "-lc",
-                "set -a && source .env && set +a && pnpm dev:web"
+                "set -a && [ -f .env ] && source .env && set +a && pnpm dev:web"
             ],
             "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "ReliefLink: Run Frontend + Backend (No Docker)",
+            "dependsOrder": "parallel",
+            "dependsOn": [
+                "ReliefLink: Run Backend Services (No Docker)",
+                "ReliefLink: Run Frontend (No Docker)"
+            ],
             "problemMatcher": []
         },
         {
@@ -68,12 +97,13 @@
             "problemMatcher": []
         },
         {
-            "label": "ReliefLink: Setup (Install + Generate + Migrate + Build)",
+            "label": "ReliefLink: Setup (No Docker)",
             "dependsOrder": "sequence",
             "dependsOn": [
+                "ReliefLink: Create .env From Example",
                 "ReliefLink: Install Dependencies",
                 "ReliefLink: Prisma Generate (All Services)",
-                "ReliefLink: Prisma Migrate (All Services)",
+                "ReliefLink: Prisma Push (All Services)",
                 "ReliefLink: Build All"
             ],
             "problemMatcher": []
