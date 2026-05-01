@@ -23,6 +23,7 @@ COPY services/volunteer-service services/volunteer-service
 COPY tsconfig.json ./
 
 ENV VOLUNTEER_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV NODE_OPTIONS="--no-warnings"
 
 RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/validators build && \

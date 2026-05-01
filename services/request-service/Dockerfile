@@ -23,6 +23,7 @@ COPY services/request-service services/request-service
 COPY tsconfig.json ./
 
 ENV REQUEST_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV NODE_OPTIONS="--no-warnings"
 
 RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/validators build && \
