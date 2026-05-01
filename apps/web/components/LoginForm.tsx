@@ -67,6 +67,13 @@ export function LoginForm() {
       router.push('/dashboard')
     } catch (error) {
       console.error('Login error:', error)
+      const message =
+        error instanceof Error ? error.message : 'Login failed. Please try again.'
+      toast({
+        title: 'Login Failed',
+        description: message,
+        variant: 'destructive',
+      })
     } finally {
       setIsLoading(false)
     }

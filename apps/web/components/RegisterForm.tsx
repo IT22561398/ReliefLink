@@ -125,6 +125,13 @@ export function RegisterForm() {
       router.push(values.role === 'volunteer' ? '/login' : '/dashboard')
     } catch (error) {
       console.error('Registration error:', error)
+      const message =
+        error instanceof Error ? error.message : 'Registration failed. Please try again.'
+      toast({
+        title: 'Registration Failed',
+        description: message,
+        variant: 'destructive',
+      })
     } finally {
       setIsLoading(false)
     }
