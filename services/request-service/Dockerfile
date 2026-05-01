@@ -32,7 +32,6 @@ RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/utils build && \
     pnpm --filter @relieflink/auth-middleware build && \
     pnpm --filter @relieflink/queue build && \
-    pnpm --filter @relieflink/request-service db:generate && \
     pnpm --filter @relieflink/request-service build
 
 FROM node:20.11-alpine AS runner

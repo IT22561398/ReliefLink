@@ -30,7 +30,6 @@ RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/logger build && \
     pnpm --filter @relieflink/utils build && \
     pnpm --filter @relieflink/queue build && \
-    pnpm --filter @relieflink/notification-service db:generate && \
     pnpm --filter @relieflink/notification-service build
 
 FROM node:20.11-alpine AS runner
