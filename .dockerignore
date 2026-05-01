@@ -39,8 +39,7 @@ coverage
 tmp
 temp
 
-# Config
-tsconfig.json
+# Config (keep tsconfig.json - needed for build)
 jest.config.*
 vitest.config.*
 .eslintrc*
