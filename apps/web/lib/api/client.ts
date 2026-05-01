@@ -65,8 +65,10 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('auth_token')
+        localStorage.removeItem('auth-store')
         window.location.replace('/login')
       }
+      return Promise.reject(error)
     }
 
     const errorMessage =

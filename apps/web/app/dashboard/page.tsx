@@ -21,20 +21,23 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [requests, volunteers, resources, notifications] = await Promise.all(
+        const [requests, volunteers, resources, notifications] = await Promise.allSettled(
           [
-            apiGet<unknown[]>('/api/v1/requests'),
-            apiGet<unknown[]>('/api/v1/volunteers'),
-            apiGet<unknown[]>('/api/v1/resources'),
-            user?.id ? apiGet<unknown[]>(`/api/v1/notifications/user/${user.id}`) : Promise.resolve([]),
+            apiGet<unknown[]>('/api/v1/requests', { headers: { 'no-toast': 'true' } }),
+            apiGet<unknown[]>('/api/v1/volunteers', { headers: { 'no-toast': 'true' } }),
+            apiGet<unknown[]>('/api/v1/resources', { headers: { 'no-toast': 'true' } }),
+            user?.id ? apiGet<unknown[]>(`/api/v1/notifications/user/${user.id}`, { headers: { 'no-toast': 'true' } }) : Promise.resolve([]),
           ],
         )
 
+        const getCount = (result: PromiseSettledResult<unknown[]>) =>
+          result.status === 'fulfilled' ? result.value.length : 0
+
         setStats({
-          requestCount: requests?.length || 0,
-          volunteerCount: volunteers?.length || 0,
-          resourceCount: resources?.length || 0,
-          notificationCount: notifications?.length || 0,
+          requestCount: getCount(requests),
+          volunteerCount: getCount(volunteers),
+          resourceCount: getCount(resources),
+          notificationCount: getCount(notifications),
         })
       } catch (error) {
         console.error('Failed to load dashboard stats:', error)
