@@ -24,13 +24,16 @@ COPY tsconfig.json ./
 
 ENV AUTH_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
+# Generate Prisma client BEFORE building (right after install context is available)
+RUN pnpm --filter @relieflink/auth-service exec prisma generate --schema=prisma/schema.prisma
+
+# Build packages and service (WITHOUT db:generate)
 RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/validators build && \
     pnpm --filter @relieflink/config build && \
     pnpm --filter @relieflink/logger build && \
     pnpm --filter @relieflink/utils build && \
     pnpm --filter @relieflink/auth-middleware build && \
-    pnpm --filter @relieflink/auth-service run db:generate && \
     pnpm --filter @relieflink/auth-service build
 
 FROM node:20.11-alpine AS runner

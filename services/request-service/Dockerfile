@@ -25,6 +25,10 @@ COPY tsconfig.json ./
 
 ENV REQUEST_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
+# Generate Prisma client BEFORE building
+RUN pnpm --filter @relieflink/request-service exec prisma generate --schema=prisma/schema.prisma
+
+# Build packages and service (WITHOUT db:generate)
 RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/validators build && \
     pnpm --filter @relieflink/config build && \
@@ -32,7 +36,6 @@ RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/utils build && \
     pnpm --filter @relieflink/auth-middleware build && \
     pnpm --filter @relieflink/queue build && \
-    pnpm --filter @relieflink/request-service run db:generate && \
     pnpm --filter @relieflink/request-service build
 
 FROM node:20.11-alpine AS runner
