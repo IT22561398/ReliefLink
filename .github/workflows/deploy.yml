@@ -1,7 +1,9 @@
 name: Deploy to AWS EKS
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Build & Deploy Services"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -12,9 +14,11 @@ permissions:
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REPOSITORY_PREFIX: ${{ secrets.AWS_ECR_REPOSITORY_PREFIX }}
+  IMAGE_TAG: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
 jobs:
   deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -22,6 +26,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.IMAGE_TAG }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -66,9 +72,12 @@ jobs:
         run: |
           ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
           cd k8s/base
-          for service in api-gateway auth-service request-service volunteer-service notification-service web; do
-            sed -i "s|image: $service:latest|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-$service:${{ github.sha }}|g" *.yaml
-          done
+          sed -i -E "s|image: .*/${ECR_REPOSITORY_PREFIX}-api-gateway:[^[:space:]]+|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-api-gateway:${IMAGE_TAG}|g" api-gateway.yaml
+          sed -i -E "s|image: .*/${ECR_REPOSITORY_PREFIX}-auth-service:[^[:space:]]+|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-auth-service:${IMAGE_TAG}|g" auth-service.yaml
+          sed -i -E "s|image: .*/${ECR_REPOSITORY_PREFIX}-request-service:[^[:space:]]+|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-request-service:${IMAGE_TAG}|g" request-service.yaml
+          sed -i -E "s|image: .*/${ECR_REPOSITORY_PREFIX}-volunteer-service:[^[:space:]]+|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-volunteer-service:${IMAGE_TAG}|g" volunteer-service.yaml
+          sed -i -E "s|image: .*/${ECR_REPOSITORY_PREFIX}-notification-service:[^[:space:]]+|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-notification-service:${IMAGE_TAG}|g" notification-service.yaml
+          sed -i -E "s|image: .*/${ECR_REPOSITORY_PREFIX}-web:[^[:space:]]+|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-web:${IMAGE_TAG}|g" web-service.yaml
 
       - name: Deploy to EKS
         run: |

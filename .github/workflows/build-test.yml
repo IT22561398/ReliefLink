@@ -8,6 +8,7 @@ on:
       - 'services/**'
       - 'apps/web/**'
       - 'packages/**'
+      - 'k8s/**'
       - '.github/workflows/**'
       - 'tsconfig.json'
 
@@ -59,7 +60,7 @@ jobs:
         with:
           images: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.AWS_ECR_REPOSITORY_PREFIX }}-${{ matrix.service }}
           tags: |
-            type=sha,format=long
+            type=raw,value=${{ github.sha }}
             type=raw,value=latest
 
       - name: Build and push ${{ matrix.service }}

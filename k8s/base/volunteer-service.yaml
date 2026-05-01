@@ -41,9 +41,22 @@ spec:
                   values:
                   - volunteer-service
               topologyKey: kubernetes.io/hostname
+      initContainers:
+      - name: migrate
+        image: 489109585253.dkr.ecr.ap-south-1.amazonaws.com/relieflink-volunteer-service:latest
+        imagePullPolicy: Always
+        command: ["sh", "-c", "./node_modules/.bin/prisma migrate deploy --schema=prisma/schema.prisma"]
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: relieflink-secrets
+              key: POSTGRES_PASSWORD
+        - name: VOLUNTEER_DATABASE_URL
+          value: "postgresql://postgres:$(DB_PASSWORD)@postgres-0.postgres:5432/volunteer_service_db"
       containers:
       - name: volunteer-service
-        image: volunteer-service:latest
+        image: 489109585253.dkr.ecr.ap-south-1.amazonaws.com/relieflink-volunteer-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3003
@@ -65,20 +78,20 @@ spec:
             configMapKeyRef:
               name: relieflink-config
               key: LOG_LEVEL
-        - name: VOLUNTEER_DATABASE_URL
-          value: "postgresql://postgres:$(DB_PASSWORD)@postgres-0.postgres:5432/postgres"
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: relieflink-secrets
               key: POSTGRES_PASSWORD
-        - name: REDIS_URL
-          value: "redis://:$(REDIS_PASSWORD)@redis-0.redis:6379"
+        - name: VOLUNTEER_DATABASE_URL
+          value: "postgresql://postgres:$(DB_PASSWORD)@postgres-0.postgres:5432/volunteer_service_db"
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: relieflink-secrets
               key: REDIS_PASSWORD
+        - name: REDIS_URL
+          value: "redis://:$(REDIS_PASSWORD)@redis-0.redis:6379"
         - name: AUTH_SERVICE_URL
           valueFrom:
             configMapKeyRef:
@@ -89,6 +102,11 @@ spec:
             configMapKeyRef:
               name: relieflink-config
               key: REQUEST_SERVICE_URL
+        - name: NOTIFICATION_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: relieflink-config
+              key: NOTIFICATION_SERVICE_URL
         livenessProbe:
           httpGet:
             path: /health

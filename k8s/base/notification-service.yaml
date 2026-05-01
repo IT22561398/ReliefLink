@@ -41,9 +41,22 @@ spec:
                   values:
                   - notification-service
               topologyKey: kubernetes.io/hostname
+      initContainers:
+      - name: migrate
+        image: 489109585253.dkr.ecr.ap-south-1.amazonaws.com/relieflink-notification-service:latest
+        imagePullPolicy: Always
+        command: ["sh", "-c", "./node_modules/.bin/prisma migrate deploy --schema=prisma/schema.prisma"]
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: relieflink-secrets
+              key: POSTGRES_PASSWORD
+        - name: NOTIFICATION_DATABASE_URL
+          value: "postgresql://postgres:$(DB_PASSWORD)@postgres-0.postgres:5432/notification_service_db"
       containers:
       - name: notification-service
-        image: notification-service:latest
+        image: 489109585253.dkr.ecr.ap-south-1.amazonaws.com/relieflink-notification-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3002
@@ -60,20 +73,20 @@ spec:
             configMapKeyRef:
               name: relieflink-config
               key: LOG_LEVEL
-        - name: NOTIFICATION_DATABASE_URL
-          value: "postgresql://postgres:$(DB_PASSWORD)@postgres-0.postgres:5432/postgres"
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: relieflink-secrets
               key: POSTGRES_PASSWORD
-        - name: REDIS_URL
-          value: "redis://:$(REDIS_PASSWORD)@redis-0.redis:6379"
+        - name: NOTIFICATION_DATABASE_URL
+          value: "postgresql://postgres:$(DB_PASSWORD)@postgres-0.postgres:5432/notification_service_db"
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: relieflink-secrets
               key: REDIS_PASSWORD
+        - name: REDIS_URL
+          value: "redis://:$(REDIS_PASSWORD)@redis-0.redis:6379"
         livenessProbe:
           httpGet:
             path: /health

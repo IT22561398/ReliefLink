@@ -41,9 +41,22 @@ spec:
                   values:
                   - auth-service
               topologyKey: kubernetes.io/hostname
+      initContainers:
+      - name: migrate
+        image: 489109585253.dkr.ecr.ap-south-1.amazonaws.com/relieflink-auth-service:latest
+        imagePullPolicy: Always
+        command: ["sh", "-c", "./node_modules/.bin/prisma migrate deploy --schema=prisma/schema.prisma"]
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: relieflink-secrets
+              key: POSTGRES_PASSWORD
+        - name: AUTH_DATABASE_URL
+          value: "postgresql://postgres:$(DB_PASSWORD)@postgres-0.postgres:5432/auth_service_db"
       containers:
       - name: auth-service
-        image: auth-service:latest
+        image: 489109585253.dkr.ecr.ap-south-1.amazonaws.com/relieflink-auth-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3001
@@ -65,13 +78,25 @@ spec:
             configMapKeyRef:
               name: relieflink-config
               key: LOG_LEVEL
-        - name: AUTH_DATABASE_URL
-          value: "postgresql://postgres:$(DB_PASSWORD)@postgres-0.postgres:5432/postgres"
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: relieflink-secrets
               key: POSTGRES_PASSWORD
+        - name: AUTH_DATABASE_URL
+          value: "postgresql://postgres:$(DB_PASSWORD)@postgres-0.postgres:5432/auth_service_db"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: relieflink-secrets
+              key: REDIS_PASSWORD
+        - name: REDIS_URL
+          value: "redis://:$(REDIS_PASSWORD)@redis-0.redis:6379"
+        - name: VOLUNTEER_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: relieflink-config
+              key: VOLUNTEER_SERVICE_URL
         livenessProbe:
           httpGet:
             path: /health

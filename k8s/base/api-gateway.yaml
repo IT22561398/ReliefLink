@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: api-gateway:latest
+        image: 489109585253.dkr.ecr.ap-south-1.amazonaws.com/relieflink-api-gateway:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3005
@@ -68,17 +68,25 @@ spec:
             configMapKeyRef:
               name: relieflink-config
               key: NOTIFICATION_SERVICE_URL
+        - name: CONFIG_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: relieflink-config
+              key: CONFIG_SERVICE_URL
         - name: CORS_ORIGIN
-          value: "*"
+          valueFrom:
+            configMapKeyRef:
+              name: relieflink-config
+              key: WEB_PUBLIC_ORIGIN
         livenessProbe:
           httpGet:
-            path: /health
+            path: /health/live
             port: 3005
           initialDelaySeconds: 20
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /health
+            path: /health/ready
             port: 3005
           initialDelaySeconds: 5
           periodSeconds: 5
