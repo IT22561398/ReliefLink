@@ -5,9 +5,11 @@ namespace: relieflink
 
 resources:
   - namespace.yaml
+  - storageclass.yaml
   - secrets-configmap.yaml
   - postgres.yaml
   - redis.yaml
+  - config-service.yaml
   - api-gateway.yaml
   - web-service.yaml
   - auth-service.yaml

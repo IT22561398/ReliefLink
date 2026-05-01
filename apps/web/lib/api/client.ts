@@ -7,8 +7,22 @@ import axios, {
 } from 'axios'
 import { toast } from '@/hooks/use-toast'
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3005'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
+
+function normalizeBaseUrl(baseUrl: string): string {
+  if (!baseUrl || baseUrl === '/') return ''
+  return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+}
+
+function normalizeApiPath(path: string): string {
+  const normalizedBaseUrl = normalizeBaseUrl(API_BASE_URL)
+
+  if (normalizedBaseUrl === '/api' && path.startsWith('/api/')) {
+    return path.slice('/api'.length)
+  }
+
+  return path
+}
 
 interface ErrorResponse {
   success: false
@@ -28,7 +42,7 @@ type ApiResponse<T> = SuccessResponse<T> | ErrorResponse
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: normalizeBaseUrl(API_BASE_URL),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -107,7 +121,7 @@ export async function apiGet<T = unknown>(
   path: string,
   config?: AxiosRequestConfig,
 ): Promise<T> {
-  return apiRequest<T>({ ...config, method: 'GET', url: path })
+  return apiRequest<T>({ ...config, method: 'GET', url: normalizeApiPath(path) })
 }
 
 export async function apiPost<T = unknown>(
@@ -115,7 +129,7 @@ export async function apiPost<T = unknown>(
   data?: unknown,
   config?: AxiosRequestConfig,
 ): Promise<T> {
-  return apiRequest<T>({ ...config, method: 'POST', url: path, data })
+  return apiRequest<T>({ ...config, method: 'POST', url: normalizeApiPath(path), data })
 }
 
 export async function apiPut<T = unknown>(
@@ -123,7 +137,7 @@ export async function apiPut<T = unknown>(
   data?: unknown,
   config?: AxiosRequestConfig,
 ): Promise<T> {
-  return apiRequest<T>({ ...config, method: 'PUT', url: path, data })
+  return apiRequest<T>({ ...config, method: 'PUT', url: normalizeApiPath(path), data })
 }
 
 export async function apiPatch<T = unknown>(
@@ -131,14 +145,14 @@ export async function apiPatch<T = unknown>(
   data?: unknown,
   config?: AxiosRequestConfig,
 ): Promise<T> {
-  return apiRequest<T>({ ...config, method: 'PATCH', url: path, data })
+  return apiRequest<T>({ ...config, method: 'PATCH', url: normalizeApiPath(path), data })
 }
 
 export async function apiDelete<T = unknown>(
   path: string,
   config?: AxiosRequestConfig,
 ): Promise<T> {
-  return apiRequest<T>({ ...config, method: 'DELETE', url: path })
+  return apiRequest<T>({ ...config, method: 'DELETE', url: normalizeApiPath(path) })
 }
 
 export class ApiError extends Error {

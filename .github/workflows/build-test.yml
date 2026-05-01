@@ -29,6 +29,8 @@ jobs:
             dockerfile: ./services/volunteer-service/Dockerfile
           - service: notification-service
             dockerfile: ./services/notification-service/Dockerfile
+          - service: config-service
+            dockerfile: ./services/config-service/Dockerfile
           - service: web
             dockerfile: ./apps/web/Dockerfile
     permissions:
@@ -82,7 +84,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [api-gateway, auth-service, request-service, volunteer-service, notification-service, web]
+        service: [api-gateway, auth-service, request-service, volunteer-service, notification-service, config-service, web]
     permissions:
       id-token: write
       contents: read

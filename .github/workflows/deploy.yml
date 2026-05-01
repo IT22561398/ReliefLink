@@ -39,6 +39,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Verify EKS cluster exists
+        run: |
+          echo "AWS region: ${AWS_REGION}"
+          echo "Configured EKS cluster: ${{ secrets.EKS_CLUSTER_STAGING }}"
+          echo "Available EKS clusters in ${AWS_REGION}:"
+          aws eks list-clusters --region "${AWS_REGION}" --output table
+
       - name: Update kubeconfig for EKS
         run: |
           aws eks update-kubeconfig \
@@ -49,7 +56,7 @@ jobs:
         run: |
           aws sts get-caller-identity
           kubectl config current-context
-          kubectl auth can-i get namespaces
+          kubectl auth can-i list namespaces
 
       - name: Create namespace
         run: |
@@ -77,6 +84,7 @@ jobs:
           sed -i -E "s|image: .*/${ECR_REPOSITORY_PREFIX}-request-service:[^[:space:]]+|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-request-service:${IMAGE_TAG}|g" request-service.yaml
           sed -i -E "s|image: .*/${ECR_REPOSITORY_PREFIX}-volunteer-service:[^[:space:]]+|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-volunteer-service:${IMAGE_TAG}|g" volunteer-service.yaml
           sed -i -E "s|image: .*/${ECR_REPOSITORY_PREFIX}-notification-service:[^[:space:]]+|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-notification-service:${IMAGE_TAG}|g" notification-service.yaml
+          sed -i -E "s|image: .*/${ECR_REPOSITORY_PREFIX}-config-service:[^[:space:]]+|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-config-service:${IMAGE_TAG}|g" config-service.yaml
           sed -i -E "s|image: .*/${ECR_REPOSITORY_PREFIX}-web:[^[:space:]]+|image: ${ECR_REGISTRY}/${ECR_REPOSITORY_PREFIX}-web:${IMAGE_TAG}|g" web-service.yaml
 
       - name: Deploy to EKS
@@ -85,8 +93,32 @@ jobs:
 
       - name: Wait for rollout
         run: |
-          for service in api-gateway auth-service request-service volunteer-service notification-service web-service; do
+          for service in config-service api-gateway auth-service request-service volunteer-service notification-service web-service; do
             kubectl rollout status deployment/$service -n relieflink --timeout=5m
+          done
+
+      - name: Diagnose rollout failure
+        if: failure()
+        run: |
+          echo "=== Pods ==="
+          kubectl get pods -n relieflink -o wide
+
+          echo "=== Deployments ==="
+          kubectl get deployments -n relieflink
+
+          echo "=== Recent Events ==="
+          kubectl get events -n relieflink --sort-by=.lastTimestamp
+
+          echo "=== Describe Deployments ==="
+          for service in config-service api-gateway auth-service request-service volunteer-service notification-service web-service; do
+            echo "--- deployment/$service ---"
+            kubectl describe deployment/$service -n relieflink || true
+          done
+
+          echo "=== Pod Logs ==="
+          for app in config-service api-gateway auth-service request-service volunteer-service notification-service web-service; do
+            echo "--- logs for app=$app ---"
+            kubectl logs -n relieflink -l app=$app --all-containers --tail=100 || true
           done
 
       - name: Verify deployment

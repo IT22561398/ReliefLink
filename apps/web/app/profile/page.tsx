@@ -7,6 +7,7 @@ import NavBar from '@/components/NavBar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { User, Mail, Phone, MapPin, Shield, Award } from 'lucide-react'
+import { apiGet } from '@/lib/api/client'
 
 export default function ProfilePage() {
   const { user } = useAuthStore()
@@ -29,22 +30,13 @@ export default function ProfilePage() {
   const fetchVolunteerData = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/v1/volunteers', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.data && data.data.length > 0) {
-          const currentVolunteer = data.data.find(
-            (v: any) => v.userId === user?.id
-          )
-          if (currentVolunteer) {
-            setVolunteerData(currentVolunteer)
-          }
+      const data = await apiGet<any[]>('/api/v1/volunteers')
+      if (data.length > 0) {
+        const currentVolunteer = data.find(
+          (v: any) => v.userId === user?.id
+        )
+        if (currentVolunteer) {
+          setVolunteerData(currentVolunteer)
         }
       }
     } catch (error) {

@@ -45,7 +45,7 @@ spec:
       - name: migrate
         image: 489109585253.dkr.ecr.ap-south-1.amazonaws.com/relieflink-request-service:latest
         imagePullPolicy: Always
-        command: ["sh", "-c", "./node_modules/.bin/prisma migrate deploy --schema=prisma/schema.prisma"]
+        command: ["sh", "-c", "until nc -z postgres-0.postgres 5432; do echo waiting for postgres; sleep 2; done; ./node_modules/.bin/prisma migrate deploy --schema=prisma/schema.prisma"]
         env:
         - name: DB_PASSWORD
           valueFrom:
