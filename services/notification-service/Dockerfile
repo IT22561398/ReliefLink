@@ -42,13 +42,15 @@ RUN apk add --no-cache curl && \
 WORKDIR /app
 
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/node_modules ./services/notification-service/node_modules
 COPY --from=builder --chown=appuser:nodejs /app/packages ./packages
-COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/dist ./dist
-COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/generated ./generated
-COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/package.json ./
-COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/prisma ./prisma
+COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/dist ./services/notification-service/dist
+COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/generated ./services/notification-service/generated
+COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/package.json ./services/notification-service/package.json
+COPY --from=builder --chown=appuser:nodejs /app/services/notification-service/prisma ./services/notification-service/prisma
 
 ENV NODE_ENV=production
+WORKDIR /app/services/notification-service
 USER appuser
 EXPOSE 3002
 

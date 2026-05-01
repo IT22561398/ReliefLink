@@ -1,11 +1,13 @@
 generator client {
   provider        = "prisma-client-js"
   output          = "../generated/client"
-  previewFeatures = ["driverAdapters"]
+  previewFeatures = ["driverAdapters", "multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
+  schemas = ["auth_service"]
+  url = env("AUTH_DATABASE_URL")
 }
 
 enum Role {
@@ -13,6 +15,7 @@ enum Role {
   volunteer
   coordinator
   admin
+  @@schema("auth_service")
 }
 
 model User {
@@ -27,4 +30,5 @@ model User {
   city         String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  @@schema("auth_service")
 }

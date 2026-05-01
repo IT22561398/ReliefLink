@@ -24,10 +24,8 @@ COPY tsconfig.json ./
 
 ENV AUTH_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
-# Generate Prisma client BEFORE building (right after install context is available)
 RUN pnpm --filter @relieflink/auth-service exec prisma generate --schema=prisma/schema.prisma
 
-# Build packages and service (WITHOUT db:generate)
 RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/validators build && \
     pnpm --filter @relieflink/config build && \
@@ -43,13 +41,15 @@ RUN apk add --no-cache curl && \
 WORKDIR /app
 
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/node_modules ./services/auth-service/node_modules
 COPY --from=builder --chown=appuser:nodejs /app/packages ./packages
-COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/dist ./dist
-COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/generated ./generated
-COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/package.json ./
-COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/prisma ./prisma
+COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/dist ./services/auth-service/dist
+COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/generated ./services/auth-service/generated
+COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/package.json ./services/auth-service/package.json
+COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/prisma ./services/auth-service/prisma
 
 ENV NODE_ENV=production
+WORKDIR /app/services/auth-service
 USER appuser
 EXPOSE 3001
 

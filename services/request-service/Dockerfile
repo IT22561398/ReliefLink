@@ -45,13 +45,15 @@ RUN apk add --no-cache curl && \
 WORKDIR /app
 
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:nodejs /app/services/request-service/node_modules ./services/request-service/node_modules
 COPY --from=builder --chown=appuser:nodejs /app/packages ./packages
-COPY --from=builder --chown=appuser:nodejs /app/services/request-service/dist ./dist
-COPY --from=builder --chown=appuser:nodejs /app/services/request-service/generated ./generated
-COPY --from=builder --chown=appuser:nodejs /app/services/request-service/package.json ./
-COPY --from=builder --chown=appuser:nodejs /app/services/request-service/prisma ./prisma
+COPY --from=builder --chown=appuser:nodejs /app/services/request-service/dist ./services/request-service/dist
+COPY --from=builder --chown=appuser:nodejs /app/services/request-service/generated ./services/request-service/generated
+COPY --from=builder --chown=appuser:nodejs /app/services/request-service/package.json ./services/request-service/package.json
+COPY --from=builder --chown=appuser:nodejs /app/services/request-service/prisma ./services/request-service/prisma
 
 ENV NODE_ENV=production
+WORKDIR /app/services/request-service
 USER appuser
 EXPOSE 3004
 
