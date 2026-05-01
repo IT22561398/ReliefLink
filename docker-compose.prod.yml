@@ -112,13 +112,15 @@ services:
   redis:
     image: redis:7-alpine
     container_name: relieflink-redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-secure_redis_password}
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-secure_redis_password}
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -133,6 +135,35 @@ services:
           cpus: '0.25'
           memory: 256M
 
+  config-service:
+    build:
+      context: .
+      dockerfile: services/config-service/Dockerfile
+    container_name: relieflink-config-service
+    environment:
+      NODE_ENV: production
+      CONFIG_SERVICE_PORT: 3006
+      AUTH_SERVICE_URL: http://auth-service:3001
+      REQUEST_SERVICE_URL: http://request-service:3004
+      VOLUNTEER_SERVICE_URL: http://volunteer-service:3003
+      NOTIFICATION_SERVICE_URL: http://notification-service:3002
+      API_GATEWAY_URL: http://api-gateway:3005
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3005}
+      CONFIG_SERVICE_TOKEN: ${CONFIG_SERVICE_TOKEN:-}
+    ports:
+      - "3006:3006"
+    networks:
+      - relieflink
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
   auth-service:
     build:
       context: .
@@ -144,6 +175,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
       JWT_EXPIRES_IN: 24h
       AUTH_DATABASE_URL: postgresql://auth_user:${AUTH_DB_PASSWORD:-secure_auth_password}@postgres-auth:5432/auth_service_db
+      REDIS_URL: redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379
+      VOLUNTEER_SERVICE_URL: http://volunteer-service:3003
       LOG_LEVEL: info
     ports:
       - "3001:3001"
@@ -175,6 +208,7 @@ services:
       REQUEST_DATABASE_URL: postgresql://request_user:${REQUEST_DB_PASSWORD:-secure_request_password}@postgres-request:5432/request_service_db
       REDIS_URL: redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379
       AUTH_SERVICE_URL: http://auth-service:3001
+      NOTIFICATION_SERVICE_URL: http://notification-service:3002
       LOG_LEVEL: info
     ports:
       - "3004:3004"
@@ -211,6 +245,7 @@ services:
       REDIS_URL: redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379
       AUTH_SERVICE_URL: http://auth-service:3001
       REQUEST_SERVICE_URL: http://request-service:3004
+      NOTIFICATION_SERVICE_URL: http://notification-service:3002
       LOG_LEVEL: info
     ports:
       - "3003:3003"
@@ -251,6 +286,77 @@ services:
       postgres-notification:
         condition: service_healthy
       redis:
+        condition: service_healthy
+    networks:
+      - relieflink
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: relieflink-api-gateway
+    environment:
+      NODE_ENV: production
+      API_GATEWAY_PORT: 3005
+      AUTH_SERVICE_URL: http://auth-service:3001
+      REQUEST_SERVICE_URL: http://request-service:3004
+      VOLUNTEER_SERVICE_URL: http://volunteer-service:3003
+      NOTIFICATION_SERVICE_URL: http://notification-service:3002
+      CONFIG_SERVICE_URL: http://config-service:3006
+      CONFIG_SERVICE_TOKEN: ${CONFIG_SERVICE_TOKEN:-}
+      CORS_ORIGIN: ${WEB_PUBLIC_ORIGIN:-http://localhost:3000}
+      CORS_CREDENTIALS: "true"
+      LOG_LEVEL: info
+    ports:
+      - "3005:3005"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      request-service:
+        condition: service_healthy
+      volunteer-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    networks:
+      - relieflink
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3005}
+    container_name: relieflink-web
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3005}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api-gateway:
         condition: service_healthy
     networks:
       - relieflink
