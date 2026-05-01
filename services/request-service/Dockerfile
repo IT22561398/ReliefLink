@@ -1,5 +1,5 @@
 FROM node:20.19-alpine AS base
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 WORKDIR /app
 
 FROM base AS deps
@@ -16,6 +16,7 @@ COPY services/request-service/prisma services/request-service/prisma
 RUN pnpm install --frozen-lockfile --filter @relieflink/request-service...
 
 FROM base AS builder
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages ./packages
 COPY --from=deps /app/services/request-service/node_modules ./services/request-service/node_modules

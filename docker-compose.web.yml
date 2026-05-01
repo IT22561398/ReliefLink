@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: relieflink-api-gateway
+    environment:
+      NODE_ENV: production
+      API_GATEWAY_PORT: 3005
+      AUTH_SERVICE_URL: http://host.docker.internal:3001
+      REQUEST_SERVICE_URL: http://host.docker.internal:3004
+      VOLUNTEER_SERVICE_URL: http://host.docker.internal:3003
+      NOTIFICATION_SERVICE_URL: http://host.docker.internal:3002
+      CONFIG_SERVICE_URL: ""
+      CORS_ORIGIN: ${WEB_PUBLIC_ORIGIN:-http://localhost:3000}
+      CORS_CREDENTIALS: "true"
+      LOG_LEVEL: info
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "3005:3005"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3005}
+    container_name: relieflink-web
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3005}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
