@@ -38,6 +38,7 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser
 WORKDIR /app
 
+COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=appuser:nodejs /app/packages/types/dist ./packages/types/dist
 COPY --from=builder --chown=appuser:nodejs /app/packages/types/package.json ./packages/types/
 COPY --from=builder --chown=appuser:nodejs /app/packages/validators/dist ./packages/validators/dist
