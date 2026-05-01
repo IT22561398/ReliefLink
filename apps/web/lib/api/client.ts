@@ -50,8 +50,11 @@ apiClient.interceptors.response.use(
   (error: AxiosError<ErrorResponse>) => {
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token')
-        window.location.replace('/login')
+        const hasToken = localStorage.getItem('auth_token')
+        if (hasToken) {
+          localStorage.removeItem('auth_token')
+          window.location.replace('/login')
+        }
       }
     }
 
