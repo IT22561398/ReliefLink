@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:20.19-alpine AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY tsconfig.json ./
 
 RUN pnpm --filter @relieflink/config-service build
 
-FROM node:20-alpine AS runner
+FROM node:20.19-alpine AS runner
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser
 WORKDIR /app

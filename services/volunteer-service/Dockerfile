@@ -1,4 +1,4 @@
-FROM node:20.11-alpine AS base
+FROM node:20.19-alpine AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
@@ -12,6 +12,7 @@ COPY packages/utils/package.json packages/utils/
 COPY packages/auth-middleware/package.json packages/auth-middleware/
 COPY packages/queue/package.json packages/queue/
 COPY services/volunteer-service/package.json services/volunteer-service/
+COPY services/volunteer-service/prisma services/volunteer-service/prisma
 RUN pnpm install --frozen-lockfile --filter @relieflink/volunteer-service...
 
 FROM base AS builder
@@ -23,7 +24,9 @@ COPY services/volunteer-service services/volunteer-service
 COPY tsconfig.json ./
 
 ENV VOLUNTEER_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-ENV NODE_OPTIONS="--no-warnings"
+
+# Generate Prisma client BEFORE building
+RUN pnpm --filter @relieflink/volunteer-service exec prisma generate --schema=prisma/schema.prisma
 
 RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/validators build && \
@@ -34,7 +37,7 @@ RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/queue build && \
     pnpm --filter @relieflink/volunteer-service build
 
-FROM node:20.11-alpine AS runner
+FROM node:20.19-alpine AS runner
 RUN apk add --no-cache curl && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser

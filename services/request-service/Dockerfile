@@ -1,4 +1,4 @@
-FROM node:20.11-alpine AS base
+FROM node:20.19-alpine AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
@@ -38,7 +38,7 @@ RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/queue build && \
     pnpm --filter @relieflink/request-service build
 
-FROM node:20.11-alpine AS runner
+FROM node:20.19-alpine AS runner
 RUN apk add --no-cache curl && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser
