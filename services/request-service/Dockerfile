@@ -12,6 +12,7 @@ COPY packages/utils/package.json packages/utils/
 COPY packages/auth-middleware/package.json packages/auth-middleware/
 COPY packages/queue/package.json packages/queue/
 COPY services/request-service/package.json services/request-service/
+COPY services/request-service/prisma services/request-service/prisma
 RUN pnpm install --frozen-lockfile --filter @relieflink/request-service...
 
 FROM base AS builder
@@ -23,7 +24,6 @@ COPY services/request-service services/request-service
 COPY tsconfig.json ./
 
 ENV REQUEST_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-ENV NODE_OPTIONS="--no-warnings"
 
 RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/validators build && \
@@ -32,6 +32,7 @@ RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/utils build && \
     pnpm --filter @relieflink/auth-middleware build && \
     pnpm --filter @relieflink/queue build && \
+    pnpm --filter @relieflink/request-service run db:generate && \
     pnpm --filter @relieflink/request-service build
 
 FROM node:20.11-alpine AS runner

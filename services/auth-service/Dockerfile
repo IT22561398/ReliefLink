@@ -11,6 +11,7 @@ COPY packages/logger/package.json packages/logger/
 COPY packages/utils/package.json packages/utils/
 COPY packages/auth-middleware/package.json packages/auth-middleware/
 COPY services/auth-service/package.json services/auth-service/
+COPY services/auth-service/prisma services/auth-service/prisma
 RUN pnpm install --frozen-lockfile --filter @relieflink/auth-service...
 
 FROM base AS builder
@@ -22,7 +23,6 @@ COPY services/auth-service services/auth-service
 COPY tsconfig.json ./
 
 ENV AUTH_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-ENV NODE_OPTIONS="--no-warnings"
 
 RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/validators build && \
@@ -30,6 +30,7 @@ RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/logger build && \
     pnpm --filter @relieflink/utils build && \
     pnpm --filter @relieflink/auth-middleware build && \
+    pnpm --filter @relieflink/auth-service run db:generate && \
     pnpm --filter @relieflink/auth-service build
 
 FROM node:20.11-alpine AS runner
