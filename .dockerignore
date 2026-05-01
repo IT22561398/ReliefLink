@@ -1,16 +1,58 @@
+# Dependencies
 node_modules
-dist
+.pnpm-store
+package-lock.json
+yarn.lock
+
+# Git
 .git
 .gitignore
-*.md
+.gitattributes
+
+# Environment
 .env
 .env.*
 !.env.example
-.DS_Store
+
+# Build outputs
+dist
+build
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing & Coverage
 coverage
 .nyc_output
+
+# Build tools
 .turbo
-.next
-.vercel
-*.tsbuildinfo
+.cache
+tmp
+temp
+
+# Config
+tsconfig.json
+jest.config.*
+vitest.config.*
+.eslintrc*
+.prettierrc*
+.editorconfig
+
+# Documentation
+README.md
+LICENSE
+CHANGELOG.md
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore

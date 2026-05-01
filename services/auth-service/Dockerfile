@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:20.11-alpine AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
@@ -21,7 +21,6 @@ COPY packages packages
 COPY services/auth-service services/auth-service
 COPY tsconfig.json ./
 
-# Dummy DATABASE_URL for Prisma generate (not used at runtime)
 ENV AUTH_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
 RUN pnpm --filter @relieflink/types build && \
@@ -33,24 +32,14 @@ RUN pnpm --filter @relieflink/types build && \
     pnpm --filter @relieflink/auth-service db:generate && \
     pnpm --filter @relieflink/auth-service build
 
-FROM node:20-alpine AS runner
-RUN addgroup --system --gid 1001 nodejs && \
+FROM node:20.11-alpine AS runner
+RUN apk add --no-cache curl && \
+    addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser
 WORKDIR /app
 
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=appuser:nodejs /app/packages/types/dist ./packages/types/dist
-COPY --from=builder --chown=appuser:nodejs /app/packages/types/package.json ./packages/types/
-COPY --from=builder --chown=appuser:nodejs /app/packages/validators/dist ./packages/validators/dist
-COPY --from=builder --chown=appuser:nodejs /app/packages/validators/package.json ./packages/validators/
-COPY --from=builder --chown=appuser:nodejs /app/packages/config/dist ./packages/config/dist
-COPY --from=builder --chown=appuser:nodejs /app/packages/config/package.json ./packages/config/
-COPY --from=builder --chown=appuser:nodejs /app/packages/logger/dist ./packages/logger/dist
-COPY --from=builder --chown=appuser:nodejs /app/packages/logger/package.json ./packages/logger/
-COPY --from=builder --chown=appuser:nodejs /app/packages/utils/dist ./packages/utils/dist
-COPY --from=builder --chown=appuser:nodejs /app/packages/utils/package.json ./packages/utils/
-COPY --from=builder --chown=appuser:nodejs /app/packages/auth-middleware/dist ./packages/auth-middleware/dist
-COPY --from=builder --chown=appuser:nodejs /app/packages/auth-middleware/package.json ./packages/auth-middleware/
+COPY --from=builder --chown=appuser:nodejs /app/packages ./packages
 COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/dist ./dist
 COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/generated ./generated
 COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/package.json ./
@@ -59,4 +48,13 @@ COPY --from=builder --chown=appuser:nodejs /app/services/auth-service/prisma ./p
 ENV NODE_ENV=production
 USER appuser
 EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:3001/health || exit 1
+
+LABEL org.opencontainers.image.title="ReliefLink Auth Service"
+LABEL org.opencontainers.image.description="Authentication service for ReliefLink disaster management platform"
+LABEL org.opencontainers.image.source="https://github.com/IT22561398/ReliefLink"
+LABEL org.opencontainers.image.version="1.0.0"
+
 CMD ["node", "dist/main.js"]

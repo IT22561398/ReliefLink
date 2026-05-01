@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL - Auth Service
   postgres-auth:
     image: postgres:16-alpine
     container_name: relieflink-postgres-auth
@@ -20,8 +19,15 @@ services:
       retries: 5
     networks:
       - relieflink
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
-  # PostgreSQL - Request Service
   postgres-request:
     image: postgres:16-alpine
     container_name: relieflink-postgres-request
@@ -40,8 +46,15 @@ services:
       retries: 5
     networks:
       - relieflink
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
-  # PostgreSQL - Volunteer Service
   postgres-volunteer:
     image: postgres:16-alpine
     container_name: relieflink-postgres-volunteer
@@ -60,8 +73,15 @@ services:
       retries: 5
     networks:
       - relieflink
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
-  # PostgreSQL - Notification Service
   postgres-notification:
     image: postgres:16-alpine
     container_name: relieflink-postgres-notification
@@ -80,8 +100,15 @@ services:
       retries: 5
     networks:
       - relieflink
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
-  # Redis
   redis:
     image: redis:7-alpine
     container_name: relieflink-redis
@@ -97,8 +124,15 @@ services:
       retries: 5
     networks:
       - relieflink
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
-  # Auth Service
   auth-service:
     build:
       context: .
@@ -116,14 +150,17 @@ services:
     depends_on:
       postgres-auth:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - relieflink
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   # Request Service
   request-service:
@@ -148,14 +185,17 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - relieflink
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   # Volunteer Service
   volunteer-service:
@@ -181,14 +221,17 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - relieflink
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   # Notification Service
   notification-service:
@@ -209,14 +252,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - relieflink
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
 volumes:
   postgres_auth_data:
