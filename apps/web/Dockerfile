@@ -12,7 +12,7 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY apps/web apps/web
-ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:3005
+ARG NEXT_PUBLIC_API_BASE_URL=/api
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 RUN pnpm --filter @relieflink/web build
 
@@ -25,7 +25,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-ENV NEXT_PUBLIC_API_BASE_URL=http://localhost:3005
+ENV NEXT_PUBLIC_API_BASE_URL=/api
 
 COPY --from=builder --chown=appuser:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=appuser:nodejs /app/apps/web/.next/static ./apps/web/.next/static
