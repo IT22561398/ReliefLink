@@ -326,7 +326,7 @@ services:
       volunteer-service:
         condition: service_healthy
       notification-service:
-        condition: service_healthy
+        condition: service_started
       config-service:
         condition: service_healthy
     networks:

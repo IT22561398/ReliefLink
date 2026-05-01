@@ -31,6 +31,8 @@ RUN apk add --no-cache curl && \
 WORKDIR /app
 
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:nodejs /app/packages/config/node_modules ./packages/config/node_modules
+COPY --from=builder --chown=appuser:nodejs /app/packages/logger/node_modules ./packages/logger/node_modules
 COPY --from=builder --chown=appuser:nodejs /app/services/api-gateway/node_modules ./services/api-gateway/node_modules
 COPY --from=builder --chown=appuser:nodejs /app/packages/config/dist ./packages/config/dist
 COPY --from=builder --chown=appuser:nodejs /app/packages/config/package.json ./packages/config/
@@ -45,6 +47,6 @@ USER appuser
 EXPOSE 3005
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3005/health || exit 1
+    CMD curl -f http://localhost:3005/health/live || exit 1
 
 CMD ["node", "dist/main.js"]
