@@ -63,7 +63,7 @@ export default function NavBar({ showSidebar, onToggleSidebar }: NavBarProps) {
           </Button>
           {user?.role === 'coordinator' && (
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/coordinator">Approvals</Link>
+              <Link href="/coordinator">Approvals Mgt</Link>
             </Button>
           )}
         </div>
