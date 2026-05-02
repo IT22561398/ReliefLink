@@ -42,7 +42,7 @@ export function LoginForm() {
   const form = useForm<LoginFormInputs>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: 'coordinator@relieflink.local',
+      email: 'coordinator@relieflink55555555555.local',
       password: 'Admin@123',
     },
   })
